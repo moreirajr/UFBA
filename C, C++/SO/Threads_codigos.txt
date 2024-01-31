@@ -1,0 +1,270 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <pthread.h>
+
+void *funcao_comum( void *);
+
+int
+main(int argc, char **argv){
+	pthread_t thread1, thread2;
+	char *mensagem1 = "Thread 1";
+	char *mensagem2 = "Thread 2";
+
+	int  status_t1, status_t2;
+
+	srand(time(NULL));
+
+	status_t1 = pthread_create( &thread1, NULL, funcao_comum, (void*) mensagem1);
+	status_t2 = pthread_create( &thread2, NULL, funcao_comum, (void*) mensagem2);
+
+	printf("Status da execucao da Thread 1: %d\n",status_t1);
+	printf("Status da execucao da Thread 2: %d\n",status_t2);
+	
+	return EXIT_SUCCESS;
+}
+
+void *
+funcao_comum( void *ptr ){
+	int tempo = rand()%500;
+	printf("A %s vai esperar por %d\n", (char *) ptr, tempo);
+	sleep(tempo);
+	return NULL;
+}
+
+//******************************
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <pthread.h>
+
+void *funcao_comum( void *ptr );
+
+int
+main(int argc, char **argv){
+	pthread_t thread1, thread2;
+	char *mensagem1 = "Thread 1";
+	char *mensagem2 = "Thread 2";
+
+	int  status_t1, status_t2;
+
+	srand(time(NULL));
+
+	status_t1 = pthread_create( &thread1, NULL, funcao_comum, (void*) mensagem1);
+	status_t2 = pthread_create( &thread2, NULL, funcao_comum, (void*) mensagem2);
+
+	pthread_join(thread1, NULL);
+	pthread_join(thread2, NULL); 
+
+	printf("Status da execucao da Thread 1: %d\n",status_t1);
+	printf("Status da execucao da Thread 2: %d\n",status_t2);
+	
+	return EXIT_SUCCESS;
+}
+
+void *
+funcao_comum( void *ptr ){
+	int tempo = rand()%20;
+	printf("A %s vai esperar por %d\n", (char *) ptr, tempo);
+	sleep(tempo);
+
+	return NULL;
+}
+
+//************************
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <pthread.h>
+
+void *funcao_comum( void *ptr );
+
+int
+main(int argc, char **argv){
+	pthread_t thread1, thread2;
+	char *mensagem1 = "Thread 1";
+	char *mensagem2 = "Thread 2";
+
+	int  status_t1, status_t2;
+
+	srand(time(NULL));
+
+	status_t1 = pthread_create( &thread1, NULL, funcao_comum, (void*) mensagem1);
+	status_t2 = pthread_create( &thread2, NULL, funcao_comum, (void*) mensagem2);
+
+	pthread_join(thread1, NULL);
+	pthread_join(thread2, NULL); 
+
+	printf("Status da execucao da Thread 1: %d\n",status_t1);
+	printf("Status da execucao da Thread 2: %d\n",status_t2);
+	
+	return EXIT_SUCCESS;
+}
+
+void *
+funcao_comum( void *ptr ){
+	int tempo = rand()%20;
+	if (tempo < 5){
+		printf("Saida imediata %s\n", (char *) ptr);
+		pthread_exit(NULL);
+	}
+	printf("A %s vai esperar por %d\n", (char *) ptr, tempo);
+	sleep(tempo);
+	printf("Fim de execução da thread %s\n", (char *) ptr);
+
+	return NULL;
+}
+
+
+//*******************8
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <pthread.h>
+
+void *funcao_comum( void *ptr );
+
+int shared_mem = -1;
+
+int
+main(int argc, char **argv){
+	pthread_t thread1, thread2;
+	int mensagem1 = 1;
+	int mensagem2 = 2;
+
+	int  status_t1, status_t2;
+
+	status_t2 = pthread_create( &thread2, NULL, funcao_comum, (void*) &mensagem2);
+	status_t1 = pthread_create( &thread1, NULL, funcao_comum, (void*) &mensagem1);
+
+	pthread_join(thread1, NULL);
+	pthread_join(thread2, NULL); 
+
+	printf("Status da execucao da Thread 1: %d\n",status_t1);
+	printf("Status da execucao da Thread 2: %d\n",status_t2);
+	
+	return EXIT_SUCCESS;
+}
+
+void *
+funcao_comum( void *ptr ){
+	int thread_id = *(int *) ptr;
+
+	srand(time(NULL));
+
+	if(thread_id == 1){
+
+		if(shared_mem == -1){
+			fprintf(stdout, "Nenhum valor foi produzido... Thread %d passará sua vez\n", thread_id);
+			//pthread_yield();
+			sched_yield();
+		}
+
+
+		fprintf(stdout, "Thread %d encontrou o valor: %d\n", thread_id, shared_mem);
+	}else{
+		shared_mem = rand()%20; 
+		fprintf(stdout, "Thread %d produziu o valor: %d\n", thread_id, shared_mem);
+	}
+
+	return NULL;
+
+}
+
+//**************************
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
+#include <unistd.h>
+
+void *funcao_comum(void *);
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+int  contador = 0;
+
+int
+main()
+{
+   pthread_t thread1, thread2;
+   char *mensagem1 = "Thread 1";
+   char *mensagem2 = "Thread 2";
+
+   srand(time(NULL));
+
+   pthread_create( &thread1, NULL, &funcao_comum, (void *) mensagem1);
+   pthread_create( &thread2, NULL, &funcao_comum, (void *) mensagem2);
+
+   pthread_join( thread1, NULL);
+   pthread_join( thread2, NULL); 
+
+   return EXIT_SUCCESS;
+}
+
+void *funcao_comum(void *vlr)
+{
+   printf("Executando thread %s \n", (char *)vlr);
+   pthread_mutex_lock( &mutex );
+   printf("Thread %s está na regiao critica\n", (char *)vlr);
+   sleep(rand()%5);
+   contador++;
+   printf("Pthread %s Valor: %d\n", (char *)vlr,contador);
+   pthread_mutex_unlock( &mutex );
+
+   return NULL;
+}
+
+
+//*******************
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <pthread.h>
+
+void *funcao_comum( void *ptr );
+
+int shared_mem[2];
+pthread_barrier_t barr;
+
+int
+main(int argc, char **argv){
+	pthread_t thread1, thread2;
+	int mensagem1 = 1;
+	int mensagem2 = 2;
+
+	int  status_t1, status_t2;
+
+	srand(time(NULL));
+
+	pthread_barrier_init(&barr, NULL, 2);
+
+	shared_mem[0] = -1000;
+	shared_mem[1] = -1000;
+
+	status_t2 = pthread_create( &thread2, NULL, funcao_comum, (void*) &mensagem2);
+	status_t1 = pthread_create( &thread1, NULL, funcao_comum, (void*) &mensagem1);
+
+	pthread_join(thread1, NULL);
+	pthread_join(thread2, NULL); 
+
+	printf("Status da execucao da Thread 1: %d\n",status_t1);
+	printf("Status da execucao da Thread 2: %d\n",status_t2);
+	
+	return EXIT_SUCCESS;
+}
+
+void *
+funcao_comum( void *ptr ){
+	int thread_id = *(int *) ptr;
+
+	shared_mem[thread_id-1] = rand()%10;
+	pthread_barrier_wait(&barr);
+
+	printf("Thread %d valor produzido %d -> total: %d\n", 
+		thread_id, shared_mem[thread_id-1], shared_mem[0]+shared_mem[1]);
+
+	return NULL;
+}
