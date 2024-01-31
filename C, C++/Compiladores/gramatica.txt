@@ -1,0 +1,53 @@
+#SS -> #S $   	 
+#S -> #CMD #S     
+#S -> &
+#CMD -> declare #L as #T.    
+#CMD -> resize #ID to #E.    
+#CMD -> put #Y
+#CMD -> if #EXP_R then [#S] #ELSE
+#CMD -> for #ID from #E to #E do [#S]
+#CMD -> foreach #ID  in #id do [#S]
+#CMD -> read #ID.
+#CMD -> print #P.   	 
+#ELSE -> else [#S] 	 
+#ELSE -> &   
+#Y -> #E in #ID.	
+#Y -> string in id.
+#P -> #ID     
+#P -> num
+#P -> char
+#P -> string
+#L -> id #V #M
+#M -> ,#L 
+#M ->  &  
+#V -> []
+#V ->  &   		
+#T -> number
+#T -> letter   	 
+#ID -> idX
+#X -> [#E]
+#X ->  &   	     
+#E -> #E #OP1 #G
+#E -> #G
+#G -> #G #OP2 #F
+#G -> #F  
+#F -> (#E)
+#F -> #OPERANDO
+#F -> -#OPERANDO
+#F -> -(#E)
+#OPERANDO -> #ID
+#OPERANDO -> num
+#OPERANDO -> char
+#OP1 -> +
+#OP1 -> -
+#OP2 -> * 
+#OP2 -> / 
+#OP2 -> %
+#EXP_R -> #E #R #Z
+#Z -> #E 	
+#R -> = 
+#R -> <>
+#R -> >=
+#R -> <=
+#R -> >
+#R -> < 

@@ -1,0 +1,251 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
+#include <unistd.h>
+
+/**
+  * Exemplo 01 da aula de deadlock.
+  * Nesse exemplo, as threads representam processos e 
+  * a funcao "void *recurso()" representa um recurso
+  * qualquer.
+  * 
+  * Execucao de dois processos utilizando um recurso
+  * compartilhado.
+  **/
+
+void *recurso( void *ptr );
+
+int
+main(int argc, char **argv)
+{
+     pthread_t thread1, thread2;
+     const char *thread_id1 = "Processo 1";
+     const char *thread_id2 = "Processo 2";
+
+     pthread_create( &thread1, NULL, recurso, (void*) thread_id1);
+     pthread_create( &thread2, NULL, recurso, (void*) thread_id2);
+
+     pthread_join( thread1, NULL);
+     pthread_join( thread2, NULL); 
+
+     return EXIT_SUCCESS;
+}
+
+void *
+recurso(void *ptr)
+{
+     char *thread_id;
+     int i;
+     thread_id = (char *) ptr;
+
+     for(i = 0; i < 10; i++) {
+	     printf("%s \n", thread_id);
+	     sleep(1);
+     }
+
+     return NULL;
+}
+
+//***********************************************************
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
+#include <unistd.h>
+
+/**
+  * Exemplo 02 da aula de deadlock.
+  * Nesse exemplo, as threads representam processos e 
+  * a funcao "void *recurso()" representa um recurso
+  * qualquer.
+  * 
+  * Execucao de dois processos utilizando um recurso
+  * que nao pode ser compartilhado. O processo que
+  * chegar primeiro bloqueia o recurso. O bloqueio
+  * eh realizado por um mutex.
+  **/
+
+void *recurso( void *ptr );
+pthread_mutex_t mutex1 = PTHREAD_MUTEX_INITIALIZER;
+
+int
+main()
+{
+     pthread_t thread1, thread2;
+     const char *thread_id1 = "Processo 1";
+     const char *thread_id2 = "Processo 2";
+    	
+     srand(time(NULL));
+
+     pthread_create( &thread1, NULL, recurso, (void*) thread_id1);
+     pthread_create( &thread2, NULL, recurso, (void*) thread_id2);
+
+     pthread_join( thread1, NULL);
+     pthread_join( thread2, NULL); 
+
+     return EXIT_SUCCESS;
+}
+
+void *recurso( void *ptr )
+{
+     char *thread_id;
+     int i;
+     thread_id = (char *) ptr;
+     int sleep_time = 0;
+
+     sleep_time = rand()%10 + 1;
+
+     printf("%s vai esperar por %d segundos\n",thread_id, sleep_time);
+     sleep(sleep_time);
+
+     pthread_mutex_lock( &mutex1 );
+     
+     printf("O recurso foi bloqueado pelo %s\n", thread_id);
+
+     for(i = 0; i < 10; i++) {
+	     printf("%s \n", thread_id);
+	     sleep(1);
+     }
+
+     printf("%s vai liberar o recurso. \n", thread_id);
+     pthread_mutex_unlock( &mutex1 );
+
+     return NULL;
+}
+//*********************
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
+#include <unistd.h>
+
+/**
+  * Exemplo 03 da aula de deadlock.
+  * Nesse exemplo, as threads representam processos e 
+  * a funcao "void *recurso_a()" e "void *recurso_b()"  
+  * representam dois recursos.
+  * 
+  * Execucao de dois processos utilizando dois recursos
+  * que nao pode ser compartilhado. Exemplo de deadlock.
+  **/
+
+void *recurso_a( void *ptr );
+void *recurso_b( void *ptr );
+pthread_mutex_t mutex1 = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t mutex2 = PTHREAD_MUTEX_INITIALIZER;
+
+main()
+{
+     pthread_t thread1, thread2;
+     const char *thread_id1 = "Processo 1";
+     const char *thread_id2 = "Processo 2";
+     int  iret1, iret2;
+
+     pthread_create( &thread1, NULL, recurso_a, (void*) thread_id1);
+     pthread_create( &thread2, NULL, recurso_b, (void*) thread_id2);
+
+     pthread_join( thread1, NULL);
+     pthread_join( thread2, NULL); 
+
+     exit(0);
+}
+
+void *recurso_a( void *ptr )
+{
+     char *thread_id;
+     int i;
+     thread_id = (char *) ptr;
+     sleep(2);
+
+     pthread_mutex_lock( &mutex1 );
+     printf("%s bloqueou recurso a\n", thread_id);
+     recurso_b(ptr);
+
+     for(i = 0; i < 10; i++) {
+	     printf("%s \n", thread_id);
+	     sleep(1);
+     }
+     pthread_mutex_unlock( &mutex1 );
+
+}
+
+void *recurso_b( void *ptr )
+{
+     char *thread_id;
+     int i;
+     thread_id = (char *) ptr;
+     sleep(2);
+
+     pthread_mutex_lock( &mutex2 );
+     printf("%s bloqueou recurso b\n", thread_id);
+     recurso_a(ptr);
+
+     for(i = 0; i < 10; i++) {
+	     printf("%s \n", thread_id);
+	     sleep(1);
+     }
+     pthread_mutex_unlock( &mutex2 );
+
+}
+//*******************
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
+#include <unistd.h>
+
+/**
+  * Exemplo 03 da aula de deadlock.
+  * Nesse exemplo, as threads representam processos e 
+  * a funcao "void *recurso_a()" e "void *recurso_b()"  
+  * representam dois recursos.
+  * 
+  * Execucao de dois processos utilizando dois recursos
+  * que nao pode ser compartilhado. Exemplo de deadlock.
+  **/
+
+void *recurso_a( void *ptr );
+void *recurso_b( void *ptr );
+pthread_mutex_t mutex1 = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t mutex2 = PTHREAD_MUTEX_INITIALIZER;
+
+main()
+{
+     pthread_t thread1, thread2;
+     const char *thread_id1 = "Processo 1";
+     const char *thread_id2 = "Processo 2";
+
+     pthread_create( &thread1, NULL, recurso_a, (void*) thread_id1);
+     pthread_create( &thread2, NULL, recurso_b, (void*) thread_id2);
+
+     pthread_join( thread1, NULL);
+     pthread_join( thread2, NULL); 
+
+     exit(0);
+}
+
+void *recurso_a( void *ptr )
+{
+     char *thread_id;
+     thread_id = (char *) ptr;
+     sleep(2);
+
+     pthread_mutex_lock( &mutex1 );
+     printf("%s bloqueou recurso a\n", thread_id);
+     recurso_b(ptr);
+     pthread_mutex_unlock( &mutex1 );
+
+}
+
+void *recurso_b( void *ptr )
+{
+     char *thread_id;
+     thread_id = (char *) ptr;
+     sleep(2);
+
+     pthread_mutex_lock( &mutex2 );
+     printf("%s bloqueou recurso b\n", thread_id);
+     recurso_a(ptr);
+     pthread_mutex_unlock( &mutex2 );
+
+}
